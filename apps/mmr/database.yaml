@@ -1,0 +1,64 @@
+---
+## postgres service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mmrpsql
+  labels:
+    app: postgres
+    org: shared
+spec:
+  ports:
+    - port: 5432
+      name: psql
+  clusterIP: None
+  selector:
+    app: postgres
+    org: shared
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mmrpsql
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+      org: shared
+  serviceName: "mmrpsql"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgres
+        org: shared
+    spec:
+      containers:
+        - name: mmrpsql
+          image: postgres:12.3
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mmr-db-secrets
+                  key: postgres-password
+            - name: POSTGRES_USER
+              value: mediarepo
+            - name: POSTGRES_DB
+              value: mediarepo
+          ports:
+            - containerPort: 5432
+              name: psql
+          volumeMounts:
+            - name: mmrpsql-data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: mmrpsql-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName:
+        resources:
+          requests:
+            storage: 100M

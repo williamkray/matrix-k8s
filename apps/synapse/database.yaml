@@ -1,0 +1,66 @@
+---
+## postgres service
+apiVersion: v1
+kind: Service
+metadata:
+  name: jmsynapsepsql
+  labels:
+    app: postgres
+    org: jobmachine
+spec:
+  ports:
+    - port: 5432
+      name: psql
+  clusterIP: None
+  selector:
+    app: postgres
+    org: jobmachine
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: jmsynapsepsql
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+      org: jobmachine
+  serviceName: "jmsynapsepsql"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgres
+        org: jobmachine
+    spec:
+      containers:
+        - name: jmsynapsepsql
+          image: postgres:12.3
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: jmsynapse-db-secrets
+                  key: postgres-password
+            - name: POSTGRES_USER
+              value: synapse_user
+            - name: POSTGRES_DB
+              value: synapse
+            - name: POSTGRES_INITDB_ARGS
+              value: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+          ports:
+            - containerPort: 5432
+              name: psql
+          volumeMounts:
+            - name: jmsynapsepsql-data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: jmsynapsepsql-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName:
+        resources:
+          requests:
+            storage: 100M

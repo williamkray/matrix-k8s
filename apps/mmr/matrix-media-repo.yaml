@@ -1,0 +1,68 @@
+## mmr service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mmr
+  labels:
+    app: mmr
+    org: shared
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: mmr
+  selector:
+    app: mmr
+    org: shared
+
+---
+## mmr process
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mmr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mmr
+      org: shared
+  strategy: 
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mmr
+        org: shared
+    spec:
+      containers:
+        - name: mmr
+          image: turt2live/matrix-media-repo:v1.2.8
+          ports:
+            - containerPort: 8000
+              name: mmr
+            - containerPort: 9000
+              name: metrics
+          env:
+            - name: REPO_CONFIG
+              value: "/data/conf.d"
+          volumeMounts:
+            - name: mmr-config
+              mountPath: /data/conf.d
+              readOnly: true
+            ## ditch this and use S3 for
+            ## stateless deployment (sorta)
+            - name: mmr-local-storage
+              mountPath: /data/media
+      volumes:
+        - name: mmr-config
+          projected:
+            sources:
+              - configMap:
+                  name: mmr-config-map
+              - secret:
+                  name: mmr-config-secrets
+        - name: mmr-local-storage
+          persistentVolumeClaim:
+            claimName: mmr-local-storage
