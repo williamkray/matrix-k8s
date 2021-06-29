@@ -34,7 +34,7 @@ spec:
           projected:
             sources:
               - configMap:
-                  name: synapse-primary-config-map
+                  name: synapse-configmap
               - secret:
                   name: synapse-config-secrets
         - name: synapse-data
