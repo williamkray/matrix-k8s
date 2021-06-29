@@ -36,4 +36,4 @@ resources:
   - mmr-pvc.yaml
 
 patches:
-  - path: use-local-storage.yaml
+  - use-local-storage.yaml

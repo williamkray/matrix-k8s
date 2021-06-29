@@ -35,7 +35,3 @@ federation:
   # media repo will back off. This defaults to 20 if not given. Note that 404 errors from
   # the remote server do not count towards this.
   backoffAt: 20
-                                                                                                         
-# The database configuration for the media repository
-# Do NOT put your homeserver's existing database credentials here. Create a new database and
-# user instead. Using the same server is fine, just not the same username and database.
