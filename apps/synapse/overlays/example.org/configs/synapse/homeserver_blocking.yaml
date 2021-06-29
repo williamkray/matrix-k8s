@@ -1,0 +1,203 @@
+## Homeserver blocking ##
+
+# How to reach the server admin, used in ResourceLimitError
+#
+#admin_contact: 'mailto:admin@server.com'
+
+# Global blocking
+#
+#hs_disabled: false
+#hs_disabled_message: 'Human readable reason for why the HS is blocked'
+
+# Monthly Active User Blocking
+#
+# Used in cases where the admin or server owner wants to limit to the
+# number of monthly active users.
+#
+# 'limit_usage_by_mau' disables/enables monthly active user blocking. When
+# enabled and a limit is reached the server returns a 'ResourceLimitError'
+# with error type Codes.RESOURCE_LIMIT_EXCEEDED
+#
+# 'max_mau_value' is the hard limit of monthly active users above which
+# the server will start blocking user actions.
+#
+# 'mau_trial_days' is a means to add a grace period for active users. It
+# means that users must be active for this number of days before they
+# can be considered active and guards against the case where lots of users
+# sign up in a short space of time never to return after their initial
+# session.
+#
+# 'mau_limit_alerting' is a means of limiting client side alerting
+# should the mau limit be reached. This is useful for small instances
+# where the admin has 5 mau seats (say) for 5 specific people and no
+# interest increasing the mau limit further. Defaults to True, which
+# means that alerting is enabled
+#
+#limit_usage_by_mau: false
+#max_mau_value: 50
+#mau_trial_days: 2
+#mau_limit_alerting: false
+
+# If enabled, the metrics for the number of monthly active users will
+# be populated, however no one will be limited. If limit_usage_by_mau
+# is true, this is implied to be true.
+#
+#mau_stats_only: false
+
+# Sometimes the server admin will want to ensure certain accounts are
+# never blocked by mau checking. These accounts are specified here.
+#
+#mau_limit_reserved_threepids:
+#  - medium: 'email'
+#    address: 'reserved_user@example.com'
+
+# Used by phonehome stats to group together related servers.
+#server_context: context
+
+# Resource-constrained homeserver settings
+#
+# When this is enabled, the room "complexity" will be checked before a user
+# joins a new remote room. If it is above the complexity limit, the server will
+# disallow joining, or will instantly leave.
+#
+# Room complexity is an arbitrary measure based on factors such as the number of
+# users in the room.
+#
+limit_remote_rooms:
+  # Uncomment to enable room complexity checking.
+  #
+  #enabled: true
+
+  # the limit above which rooms cannot be joined. The default is 1.0.
+  #
+  #complexity: 0.5
+
+  # override the error which is returned when the room is too complex.
+  #
+  #complexity_error: "This room is too complex."
+
+  # allow server admins to join complex rooms. Default is false.
+  #
+  #admins_can_join: true
+
+# Whether to require a user to be in the room to add an alias to it.
+# Defaults to 'true'.
+#
+#require_membership_for_aliases: false
+
+# Whether to allow per-room membership profiles through the send of membership
+# events with profile information that differ from the target's global profile.
+# Defaults to 'true'.
+#
+#allow_per_room_profiles: false
+
+# How long to keep redacted events in unredacted form in the database. After
+# this period redacted events get replaced with their redacted form in the DB.
+#
+# Defaults to `7d`. Set to `null` to disable.
+#
+#redaction_retention_period: 28d
+
+# How long to track users' last seen time and IPs in the database.
+#
+# Defaults to `28d`. Set to `null` to disable clearing out of old rows.
+#
+#user_ips_max_age: 14d
+
+# Message retention policy at the server level.
+#
+# Room admins and mods can define a retention period for their rooms using the
+# 'm.room.retention' state event, and server admins can cap this period by setting
+# the 'allowed_lifetime_min' and 'allowed_lifetime_max' config options.
+#
+# If this feature is enabled, Synapse will regularly look for and purge events
+# which are older than the room's maximum retention period. Synapse will also
+# filter events received over federation so that events that should have been
+# purged are ignored and not stored again.
+#
+retention:
+  # The message retention policies feature is disabled by default. Uncomment the
+  # following line to enable it.
+  #
+  #enabled: true
+
+  # Default retention policy. If set, Synapse will apply it to rooms that lack the
+  # 'm.room.retention' state event. Currently, the value of 'min_lifetime' doesn't
+  # matter much because Synapse doesn't take it into account yet.
+  #
+  #default_policy:
+  #  min_lifetime: 1d
+  #  max_lifetime: 1y
+
+  # Retention policy limits. If set, and the state of a room contains a
+  # 'm.room.retention' event in its state which contains a 'min_lifetime' or a
+  # 'max_lifetime' that's out of these bounds, Synapse will cap the room's policy
+  # to these limits when running purge jobs.
+  #
+  #allowed_lifetime_min: 1d
+  #allowed_lifetime_max: 1y
+
+  # Server admins can define the settings of the background jobs purging the
+  # events which lifetime has expired under the 'purge_jobs' section.
+  #
+  # If no configuration is provided, a single job will be set up to delete expired
+  # events in every room daily.
+  #
+  # Each job's configuration defines which range of message lifetimes the job
+  # takes care of. For example, if 'shortest_max_lifetime' is '2d' and
+  # 'longest_max_lifetime' is '3d', the job will handle purging expired events in
+  # rooms whose state defines a 'max_lifetime' that's both higher than 2 days, and
+  # lower than or equal to 3 days. Both the minimum and the maximum value of a
+  # range are optional, e.g. a job with no 'shortest_max_lifetime' and a
+  # 'longest_max_lifetime' of '3d' will handle every room with a retention policy
+  # which 'max_lifetime' is lower than or equal to three days.
+  #
+  # The rationale for this per-job configuration is that some rooms might have a
+  # retention policy with a low 'max_lifetime', where history needs to be purged
+  # of outdated messages on a more frequent basis than for the rest of the rooms
+  # (e.g. every 12h), but not want that purge to be performed by a job that's
+  # iterating over every room it knows, which could be heavy on the server.
+  #
+  # If any purge job is configured, it is strongly recommended to have at least
+  # a single job with neither 'shortest_max_lifetime' nor 'longest_max_lifetime'
+  # set, or one job without 'shortest_max_lifetime' and one job without
+  # 'longest_max_lifetime' set. Otherwise some rooms might be ignored, even if
+  # 'allowed_lifetime_min' and 'allowed_lifetime_max' are set, because capping a
+  # room's policy to these values is done after the policies are retrieved from
+  # Synapse's database (which is done using the range specified in a purge job's
+  # configuration).
+  #
+  #purge_jobs:
+  #  - longest_max_lifetime: 3d
+  #    interval: 12h
+  #  - shortest_max_lifetime: 3d
+  #    interval: 1d
+
+# Inhibits the /requestToken endpoints from returning an error that might leak
+# information about whether an e-mail address is in use or not on this
+# homeserver.
+# Note that for some endpoints the error situation is the e-mail already being
+# used, and for others the error is entering the e-mail being unused.
+# If this option is enabled, instead of returning an error, these endpoints will
+# act as if no error happened and return a fake session ID ('sid') to clients.
+#
+#request_token_inhibit_3pid_errors: true
+
+# A list of domains that the domain portion of 'next_link' parameters
+# must match.
+#
+# This parameter is optionally provided by clients while requesting
+# validation of an email or phone number, and maps to a link that
+# users will be automatically redirected to after validation
+# succeeds. Clients can make use this parameter to aid the validation
+# process.
+#
+# The whitelist is applied whether the homeserver or an
+# identity server is handling validation.
+#
+# The default value is no whitelist functionality; all domains are
+# allowed. Setting this value to an empty list will instead disallow
+# all domains.
+#
+#next_link_domain_whitelist: ["matrix.org"]
+    

@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: jmsynapseingress
+  name: synapse-ingress
   annotations:
     kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/configuration-snippet: |
@@ -15,16 +15,16 @@ spec:
             pathType: Prefix
             backend:
               service: 
-                name: jmsynapse
+                name: synapse
                 port: 
                   # example using port name
                   name: synapse
-          - path: /_matrix_media
-            pathType: Prefix
-            backend:
-              service:
-                name: matrixmediarepo
-                port:
-                  # example using port number
-                  number: 8000
+#         - path: /_matrix_media
+#           pathType: Prefix
+#           backend:
+#             service:
+#               name: matrixmediarepo
+#               port:
+#                 # example using port number
+#                 number: 8000
 
