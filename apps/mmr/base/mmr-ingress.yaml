@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mmr-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Forwarded-Host: example.com";
+spec:
+  rules:
+    - host: synapse.example.com
+      http:
+        paths:
+          - path: /_matrix_media
+            pathType: Prefix
+            backend:
+              service:
+                name: mmr
+                port:
+                  # example using port number
+                  number: 8000
+

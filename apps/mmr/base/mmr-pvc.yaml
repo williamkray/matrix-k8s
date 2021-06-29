@@ -1,4 +1,3 @@
----
 ## persistent volume claim for local testing
 ## presumably mmr should be configured for S3 storage
 ## and this persistent volume can be eliminated

@@ -1,41 +1,20 @@
----
-## postgres service
-apiVersion: v1
-kind: Service
-metadata:
-  name: mmrpsql
-  labels:
-    app: postgres
-    org: shared
-spec:
-  ports:
-    - port: 5432
-      name: psql
-  clusterIP: None
-  selector:
-    app: postgres
-    org: shared
-
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: mmrpsql
+  name: mmr-psql
 spec:
   selector:
     matchLabels:
       app: postgres
-      org: shared
-  serviceName: "mmrpsql"
+  serviceName: "mmr-psql"
   replicas: 1
   template:
     metadata:
       labels:
         app: postgres
-        org: shared
     spec:
       containers:
-        - name: mmrpsql
+        - name: mmr-psql
           image: postgres:12.3
           env:
             - name: POSTGRES_PASSWORD

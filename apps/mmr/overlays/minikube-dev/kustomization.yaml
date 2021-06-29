@@ -1,0 +1,39 @@
+configMapGenerator:
+  - name: mmr-config-map
+    files:
+      - configs/mmr/01-repo.yaml
+      - configs/mmr/03-homeservers.yaml
+      - configs/mmr/04-accesstokens.yaml
+      - configs/mmr/05-admins.yaml
+      - configs/mmr/06-sharedsecretauth.yaml
+      - configs/mmr/08-archiving.yaml
+      - configs/mmr/09-uploads.yaml
+      - configs/mmr/10-downloads.yaml
+      - configs/mmr/11-previews.yaml
+      - configs/mmr/12-thumbnails.yaml
+      - configs/mmr/13-ratelimits.yaml
+      - configs/mmr/14-identicons.yaml
+      - configs/mmr/15-quarantine.yaml
+      - configs/mmr/16-timeouts.yaml
+      - configs/mmr/17-metrics.yaml
+      - configs/mmr/18-plugins.yaml
+      - configs/mmr/19-unstablefeatures.yaml
+      - configs/mmr/20-sentry.yaml
+
+secretGenerator:
+  - name: mmr-config-secrets
+    files:
+      - secrets/mmr/02-database.yaml
+      - secrets/mmr/07-s3datastores.yaml
+
+  - name: mmr-db-secrets
+    envs:
+      - secrets/database/db-credentials.env
+
+resources:
+  - ../../base
+  # include local-storage in dev-only overlays
+  - mmr-pvc.yaml
+
+patches:
+  - path: use-local-storage.yaml

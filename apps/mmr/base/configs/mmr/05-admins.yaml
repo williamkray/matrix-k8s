@@ -1,0 +1,5 @@
+# These users have full access to the administrative functions of the media repository.
+# See docs/admin.md for information on what these people can do. They must belong to one of the
+# configured homeservers above.
+admins:
+  - "@your_username:example.org"
