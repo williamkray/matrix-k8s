@@ -1,0 +1,46 @@
+namePrefix: 
+namespace: default
+
+configMapGenerator:
+  - name: synapse-configmap
+    files:
+      - configs/synapse/account_validity.yaml
+      - configs/synapse/caching.yaml
+      - configs/synapse/captcha.yaml
+      - configs/synapse/federation.yaml
+      - configs/synapse/homeserver_blocking.yaml
+      - configs/synapse/logging.yaml
+      - configs/synapse/media_store.yaml
+      - configs/synapse/metrics.yaml
+      - configs/synapse/opentracing.yaml
+      - configs/synapse/push.yaml
+      - configs/synapse/ratelimiting.yaml
+      - configs/synapse/rooms.yaml
+      - configs/synapse/server.yaml
+      - configs/synapse/signing-keys.yaml
+      - configs/synapse/sso.yaml
+      - configs/synapse/tls.yaml
+      - configs/synapse/workers.yaml
+  - name: synapse-logging-config-map
+    files:
+      - configs/synapse/synapse.log.config
+
+secretGenerator:
+  - name: synapse-config-secrets
+    files:
+      - secrets/synapse/api_config.yaml
+      - secrets/synapse/database.yaml
+      - secrets/synapse/registration.yaml
+      - secrets/synapse/turn.yaml
+  - name: synapse-data-secrets
+    files:
+      - secrets/synapse/synapse.signing.key
+  - name: synapse-db-secrets
+    envs:
+      - secrets/database/db-credentials.env
+
+resources:
+  - database-service.yaml
+  - database-statefulset.yaml
+  - synapse-deployment.yaml
+  - synapse-service.yaml

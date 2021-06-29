@@ -1,28 +1,26 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: jmsynapsepsql
+  name: synapse-psql
 spec:
   selector:
     matchLabels:
       app: postgres
-      org: jobmachine
-  serviceName: "jmsynapsepsql"
+  serviceName: "synapse-psql"
   replicas: 1
   template:
     metadata:
       labels:
         app: postgres
-        org: jobmachine
     spec:
       containers:
-        - name: jmsynapsepsql
+        - name: synapse-psql
           image: postgres:12.3
           env:
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: jmsynapse-db-secrets
+                  name: synapse-db-secrets
                   key: postgres-password
             - name: POSTGRES_USER
               value: synapse_user
@@ -34,11 +32,11 @@ spec:
             - containerPort: 5432
               name: psql
           volumeMounts:
-            - name: jmsynapsepsql-data
+            - name: synapse-psql-data
               mountPath: /var/lib/postgresql/data
   volumeClaimTemplates:
     - metadata:
-        name: jmsynapsepsql-data
+        name: synapse-psql-data
       spec:
         accessModes: [ "ReadWriteOnce" ]
         storageClassName:

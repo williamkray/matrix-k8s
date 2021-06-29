@@ -1,10 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: jmsynapse
+  name: synapse
   labels:
     app: synapse
-    org: jobmachine
 spec:
   type: ClusterIP
   ports:
@@ -13,4 +12,3 @@ spec:
       name: synapse
   selector:
     app: synapse
-    org: jobmachine

@@ -1,0 +1,910 @@
+## single sign-on integration ##
+
+# the following settings can be used to make synapse use a single sign-on
+# provider for authentication, instead of its internal password database.
+#
+# you will probably also want to set the following options to `false` to
+# disable the regular login/registration flows:
+#   * enable_registration
+#   * password_config.enabled
+#
+# you will also want to investigate the settings under the "sso" configuration
+# section below.
+
+# enable saml2 for registration and login. uses pysaml2.
+#
+# at least one of `sp_config` or `config_path` must be set in this section to
+# enable saml login.
+#
+# once saml support is enabled, a metadata file will be exposed at
+# https://<server>:<port>/_synapse/client/saml2/metadata.xml, which you may be able to
+# use to configure your saml idp with. alternatively, you can manually configure
+# the idp to use an acs location of
+# https://<server>:<port>/_synapse/client/saml2/authn_response.
+#
+saml2_config:
+  # `sp_config` is the configuration for the pysaml2 service provider.
+  # see pysaml2 docs for format of config.
+  #
+  # default values will be used for the 'entityid' and 'service' settings,
+  # so it is not normally necessary to specify them unless you need to
+  # override them.
+  #
+  sp_config:
+    # point this to the idp's metadata. you must provide either a local
+    # file via the `local` attribute or (preferably) a url via the
+    # `remote` attribute.
+    #
+    #metadata:
+    #  local: ["saml2/idp.xml"]
+    #  remote:
+    #    - url: https://our_idp/metadata.xml
+
+    # allowed clock difference in seconds between the homeserver and idp.
+    #
+    # uncomment the below to increase the accepted time difference from 0 to 3 seconds.
+    #
+    #accepted_time_diff: 3
+
+    # by default, the user has to go to our login page first. if you'd like
+    # to allow idp-initiated login, set 'allow_unsolicited: true' in a
+    # 'service.sp' section:
+    #
+    #service:
+    #  sp:
+    #    allow_unsolicited: true
+
+    # the examples below are just used to generate our metadata xml, and you
+    # may well not need them, depending on your setup. alternatively you
+    # may need a whole lot more detail - see the pysaml2 docs!
+
+    #description: ["my awesome sp", "en"]
+    #name: ["test sp", "en"]
+
+    #ui_info:
+    #  display_name:
+    #    - lang: en
+    #      text: "display name is the descriptive name of your service."
+    #  description:
+    #    - lang: en
+    #      text: "description should be a short paragraph explaining the purpose of the service."
+    #  information_url:
+    #    - lang: en
+    #      text: "https://example.com/terms-of-service"
+    #  privacy_statement_url:
+    #    - lang: en
+    #      text: "https://example.com/privacy-policy"
+    #  keywords:
+    #    - lang: en
+    #      text: ["matrix", "element"]
+    #  logo:
+    #    - lang: en
+    #      text: "https://example.com/logo.svg"
+    #      width: "200"
+    #      height: "80"
+
+    #organization:
+    #  name: example com
+    #  display_name:
+    #    - ["example co", "en"]
+    #  url: "http://example.com"
+
+    #contact_person:
+    #  - given_name: bob
+    #    sur_name: "the sysadmin"
+    #    email_address": ["admin@example.com"]
+    #    contact_type": technical
+
+  # instead of putting the config inline as above, you can specify a
+  # separate pysaml2 configuration file:
+  #
+  #config_path: "/data/sp_conf.py"
+
+  # the lifetime of a saml session. this defines how long a user has to
+  # complete the authentication process, if allow_unsolicited is unset.
+  # the default is 15 minutes.
+  #
+  #saml_session_lifetime: 5m
+
+  # an external module can be provided here as a custom solution to
+  # mapping attributes returned from a saml provider onto a matrix user.
+  #
+  user_mapping_provider:
+    # the custom module's class. uncomment to use a custom module.
+    #
+    #module: mapping_provider.samlmappingprovider
+
+    # custom configuration values for the module. below options are
+    # intended for the built-in provider, they should be changed if
+    # using a custom module. this section will be passed as a python
+    # dictionary to the module's `parse_config` method.
+    #
+    config:
+      # the saml attribute (after mapping via the attribute maps) to use
+      # to derive the matrix id from. 'uid' by default.
+      #
+      # note: this used to be configured by the
+      # saml2_config.mxid_source_attribute option. if that is still
+      # defined, its value will be used instead.
+      #
+      #mxid_source_attribute: displayname
+
+      # the mapping system to use for mapping the saml attribute onto a
+      # matrix id.
+      #
+      # options include:
+      #  * 'hexencode' (which maps unpermitted characters to '=xx')
+      #  * 'dotreplace' (which replaces unpermitted characters with
+      #     '.').
+      # the default is 'hexencode'.
+      #
+      # note: this used to be configured by the
+      # saml2_config.mxid_mapping option. if that is still defined, its
+      # value will be used instead.
+      #
+      #mxid_mapping: dotreplace
+
+  # in previous versions of synapse, the mapping from saml attribute to
+  # mxid was always calculated dynamically rather than stored in a
+  # table. for backwards- compatibility, we will look for user_ids
+  # matching such a pattern before creating a new account.
+  #
+  # this setting controls the saml attribute which will be used for this
+  # backwards-compatibility lookup. typically it should be 'uid', but if
+  # the attribute maps are changed, it may be necessary to change it.
+  #
+  # the default is 'uid'.
+  #
+  #grandfathered_mxid_source_attribute: upn
+
+  # it is possible to configure synapse to only allow logins if saml attributes
+  # match particular values. the requirements can be listed under
+  # `attribute_requirements` as shown below. all of the listed attributes must
+  # match for the login to be permitted.
+  #
+  #attribute_requirements:
+  #  - attribute: usergroup
+  #    value: "staff"
+  #  - attribute: department
+  #    value: "sales"
+
+  # if the metadata xml contains multiple idp entities then the `idp_entityid`
+  # option must be set to the entity to redirect users to.
+  #
+  # most deployments only have a single idp entity and so should omit this
+  # option.
+  #
+  #idp_entityid: 'https://our_idp/entityid'
+
+
+# list of openid connect (oidc) / oauth 2.0 identity providers, for registration
+# and login.
+#
+# options for each entry include:
+#
+#   idp_id: a unique identifier for this identity provider. used internally
+#       by synapse; should be a single word such as 'github'.
+#
+#       note that, if this is changed, users authenticating via that provider
+#       will no longer be recognised as the same user!
+#
+#       (use "oidc" here if you are migrating from an old "oidc_config"
+#       configuration.)
+#
+#   idp_name: a user-facing name for this identity provider, which is used to
+#       offer the user a choice of login mechanisms.
+#
+#   idp_icon: an optional icon for this identity provider, which is presented
+#       by clients and synapse's own idp picker page. if given, must be an
+#       mxc uri of the format mxc://<server-name>/<media-id>. (an easy way to
+#       obtain such an mxc uri is to upload an image to an (unencrypted) room
+#       and then copy the "url" from the source of the event.)
+#
+#   idp_brand: an optional brand for this identity provider, allowing clients
+#       to style the login flow according to the identity provider in question.
+#       see the spec for possible options here.
+#
+#   discover: set to 'false' to disable the use of the oidc discovery mechanism
+#       to discover endpoints. defaults to true.
+#
+#   issuer: required. the oidc issuer. used to validate tokens and (if discovery
+#       is enabled) to discover the provider's endpoints.
+#
+#   client_id: required. oauth2 client id to use.
+#
+#   client_secret: oauth2 client secret to use. may be omitted if
+#        client_secret_jwt_key is given, or if client_auth_method is 'none'.
+#
+#   client_secret_jwt_key: alternative to client_secret: details of a key used
+#      to create a json web token to be used as an oauth2 client secret. if
+#      given, must be a dictionary with the following properties:
+#
+#          key: a pem-encoded signing key. must be a suitable key for the
+#              algorithm specified. required unless 'key_file' is given.
+#
+#          key_file: the path to file containing a pem-encoded signing key file.
+#              required unless 'key' is given.
+#
+#          jwt_header: a dictionary giving properties to include in the jwt
+#              header. must include the key 'alg', giving the algorithm used to
+#              sign the jwt, such as "es256", using the jwa identifiers in
+#              rfc7518.
+#
+#          jwt_payload: an optional dictionary giving properties to include in
+#              the jwt payload. normally this should include an 'iss' key.
+#
+#   client_auth_method: auth method to use when exchanging the token. valid
+#       values are 'client_secret_basic' (default), 'client_secret_post' and
+#       'none'.
+#
+#   scopes: list of scopes to request. this should normally include the "openid"
+#       scope. defaults to ["openid"].
+#
+#   authorization_endpoint: the oauth2 authorization endpoint. required if
+#       provider discovery is disabled.
+#
+#   token_endpoint: the oauth2 token endpoint. required if provider discovery is
+#       disabled.
+#
+#   userinfo_endpoint: the oidc userinfo endpoint. required if discovery is
+#       disabled and the 'openid' scope is not requested.
+#
+#   jwks_uri: uri where to fetch the jwks. required if discovery is disabled and
+#       the 'openid' scope is used.
+#
+#   skip_verification: set to 'true' to skip metadata verification. use this if
+#       you are connecting to a provider that is not openid connect compliant.
+#       defaults to false. avoid this in production.
+#
+#   user_profile_method: whether to fetch the user profile from the userinfo
+#       endpoint. valid values are: 'auto' or 'userinfo_endpoint'.
+#
+#       defaults to 'auto', which fetches the userinfo endpoint if 'openid' is
+#       included in 'scopes'. set to 'userinfo_endpoint' to always fetch the
+#       userinfo endpoint.
+#
+#   allow_existing_users: set to 'true' to allow a user logging in via oidc to
+#       match a pre-existing account instead of failing. this could be used if
+#       switching from password logins to oidc. defaults to false.
+#
+#   user_mapping_provider: configuration for how attributes returned from a oidc
+#       provider are mapped onto a matrix user. this setting has the following
+#       sub-properties:
+#
+#       module: the class name of a custom mapping module. default is
+#           'synapse.handlers.oidc.jinjaoidcmappingprovider'.
+#           see https://github.com/matrix-org/synapse/blob/master/docs/sso_mapping_providers.md#openid-mapping-providers
+#           for information on implementing a custom mapping provider.
+#
+#       config: configuration for the mapping provider module. this section will
+#           be passed as a python dictionary to the user mapping provider
+#           module's `parse_config` method.
+#
+#           for the default provider, the following settings are available:
+#
+#             subject_claim: name of the claim containing a unique identifier
+#                 for the user. defaults to 'sub', which openid connect
+#                 compliant providers should provide.
+#
+#             localpart_template: jinja2 template for the localpart of the mxid.
+#                 if this is not set, the user will be prompted to choose their
+#                 own username (see 'sso_auth_account_details.html' in the 'sso'
+#                 section of this file).
+#
+#             display_name_template: jinja2 template for the display name to set
+#                 on first login. if unset, no displayname will be set.
+#
+#             email_template: jinja2 template for the email address of the user.
+#                 if unset, no email address will be added to the account.
+#
+#             extra_attributes: a map of jinja2 templates for extra attributes
+#                 to send back to the client during login.
+#                 note that these are non-standard and clients will ignore them
+#                 without modifications.
+#
+#           when rendering, the jinja2 templates are given a 'user' variable,
+#           which is set to the claims returned by the userinfo endpoint and/or
+#           in the id token.
+#
+#   it is possible to configure synapse to only allow logins if certain attributes
+#   match particular values in the oidc userinfo. the requirements can be listed under
+#   `attribute_requirements` as shown below. all of the listed attributes must
+#   match for the login to be permitted. additional attributes can be added to
+#   userinfo by expanding the `scopes` section of the oidc config to retrieve
+#   additional information from the oidc provider.
+#
+#   if the oidc claim is a list, then the attribute must match any value in the list.
+#   otherwise, it must exactly match the value of the claim. using the example
+#   below, the `family_name` claim must be "stephensson", but the `groups`
+#   claim must contain "admin".
+#
+#   attribute_requirements:
+#     - attribute: family_name
+#       value: "stephensson"
+#     - attribute: groups
+#       value: "admin"
+#
+# see https://github.com/matrix-org/synapse/blob/master/docs/openid.md
+# for information on how to configure these options.
+#
+# for backwards compatibility, it is also possible to configure a single oidc
+# provider via an 'oidc_config' setting. this is now deprecated and admins are
+# advised to migrate to the 'oidc_providers' format. (when doing that migration,
+# use 'oidc' for the idp_id to ensure that existing users continue to be
+# recognised.)
+#
+oidc_providers:
+  # generic example
+  #
+  #- idp_id: my_idp
+  #  idp_name: "my openid provider"
+  #  idp_icon: "mxc://example.com/mediaid"
+  #  discover: false
+  #  issuer: "https://accounts.example.com/"
+  #  client_id: "provided-by-your-issuer"
+  #  client_secret: "provided-by-your-issuer"
+  #  client_auth_method: client_secret_post
+  #  scopes: ["openid", "profile"]
+  #  authorization_endpoint: "https://accounts.example.com/oauth2/auth"
+  #  token_endpoint: "https://accounts.example.com/oauth2/token"
+  #  userinfo_endpoint: "https://accounts.example.com/userinfo"
+  #  jwks_uri: "https://accounts.example.com/.well-known/jwks.json"
+  #  skip_verification: true
+  #  user_mapping_provider:
+  #    config:
+  #      subject_claim: "id"
+  #      localpart_template: "{{ user.login }}"
+  #      display_name_template: "{{ user.name }}"
+  #      email_template: "{{ user.email }}"
+  #  attribute_requirements:
+  #    - attribute: usergroup
+  #      value: "synapseusers"
+
+
+# enable central authentication service (cas) for registration and login.
+#
+cas_config:
+  # uncomment the following to enable authorization against a cas server.
+  # defaults to false.
+  #
+  #enabled: true
+
+  # the url of the cas authorization endpoint.
+  #
+  #server_url: "https://cas-server.com"
+
+  # the attribute of the cas response to use as the display name.
+  #
+  # if unset, no displayname will be set.
+  #
+  #displayname_attribute: name
+
+  # it is possible to configure synapse to only allow logins if cas attributes
+  # match particular values. all of the keys in the mapping below must exist
+  # and the values must match the given value. alternately if the given value
+  # is none then any value is allowed (the attribute just must exist).
+  # all of the listed attributes must match for the login to be permitted.
+  #
+  #required_attributes:
+  #  usergroup: "staff"
+  #  department: none
+
+
+# additional settings to use with single-sign on systems such as openid connect,
+# saml2 and cas.
+#
+sso:
+    # a list of client urls which are whitelisted so that the user does not
+    # have to confirm giving access to their account to the url. any client
+    # whose url starts with an entry in the following list will not be subject
+    # to an additional confirmation step after the sso login is completed.
+    #
+    # warning: an entry such as "https://my.client" is insecure, because it
+    # will also match "https://my.client.evil.site", exposing your users to
+    # phishing attacks from evil.site. to avoid this, include a slash after the
+    # hostname: "https://my.client/".
+    #
+    # if public_baseurl is set, then the login fallback page (used by clients
+    # that don't natively support the required login flows) is whitelisted in
+    # addition to any urls in this list.
+    #
+    # by default, this list is empty.
+    #
+    #client_whitelist:
+    #  - https://riot.im/develop
+    #  - https://my.custom.client/
+
+    # directory in which synapse will try to find the template files below.
+    # if not set, or the files named below are not found within the template
+    # directory, default templates from within the synapse package will be used.
+    #
+    # synapse will look for the following templates in this directory:
+    #
+    # * html page to prompt the user to choose an identity provider during
+    #   login: 'sso_login_idp_picker.html'.
+    #
+    #   this is only used if multiple sso identity providers are configured.
+    #
+    #   when rendering, this template is given the following variables:
+    #     * redirect_url: the url that the user will be redirected to after
+    #       login.
+    #
+    #     * server_name: the homeserver's name.
+    #
+    #     * providers: a list of available identity providers. each element is
+    #       an object with the following attributes:
+    #
+    #         * idp_id: unique identifier for the idp
+    #         * idp_name: user-facing name for the idp
+    #         * idp_icon: if specified in the idp config, an mxc uri for an icon
+    #              for the idp
+    #         * idp_brand: if specified in the idp config, a textual identifier
+    #              for the brand of the idp
+    #
+    #   the rendered html page should contain a form which submits its results
+    #   back as a get request, with the following query parameters:
+    #
+    #     * redirecturl: the client redirect uri (ie, the `redirect_url` passed
+    #       to the template)
+    #
+    #     * idp: the 'idp_id' of the chosen idp.
+    #
+    # * html page to prompt new users to enter a userid and confirm other
+    #   details: 'sso_auth_account_details.html'. this is only shown if the
+    #   sso implementation (with any user_mapping_provider) does not return
+    #   a localpart.
+    #
+    #   when rendering, this template is given the following variables:
+    #
+    #     * server_name: the homeserver's name.
+    #
+    #     * idp: details of the sso identity provider that the user logged in
+    #       with: an object with the following attributes:
+    #
+    #         * idp_id: unique identifier for the idp
+    #         * idp_name: user-facing name for the idp
+    #         * idp_icon: if specified in the idp config, an mxc uri for an icon
+    #              for the idp
+    #         * idp_brand: if specified in the idp config, a textual identifier
+    #              for the brand of the idp
+    #
+    #     * user_attributes: an object containing details about the user that
+    #       we received from the idp. may have the following attributes:
+    #
+    #         * display_name: the user's display_name
+    #         * emails: a list of email addresses
+    #
+    #   the template should render a form which submits the following fields:
+    #
+    #     * username: the localpart of the user's chosen user id
+    #
+    # * html page allowing the user to consent to the server's terms and
+    #   conditions. this is only shown for new users, and only if
+    #   `user_consent.require_at_registration` is set.
+    #
+    #   when rendering, this template is given the following variables:
+    #
+    #     * server_name: the homeserver's name.
+    #
+    #     * user_id: the user's matrix proposed id.
+    #
+    #     * user_profile.display_name: the user's proposed display name, if any.
+    #
+    #     * consent_version: the version of the terms that the user will be
+    #       shown
+    #
+    #     * terms_url: a link to the page showing the terms.
+    #
+    #   the template should render a form which submits the following fields:
+    #
+    #     * accepted_version: the version of the terms accepted by the user
+    #       (ie, 'consent_version' from the input variables).
+    #
+    # * html page for a confirmation step before redirecting back to the client
+    #   with the login token: 'sso_redirect_confirm.html'.
+    #
+    #   when rendering, this template is given the following variables:
+    #
+    #     * redirect_url: the url the user is about to be redirected to.
+    #
+    #     * display_url: the same as `redirect_url`, but with the query
+    #                    parameters stripped. the intention is to have a
+    #                    human-readable url to show to users, not to use it as
+    #                    the final address to redirect to.
+    #
+    #     * server_name: the homeserver's name.
+    #
+    #     * new_user: a boolean indicating whether this is the user's first time
+    #          logging in.
+    #
+    #     * user_id: the user's matrix id.
+    #
+    #     * user_profile.avatar_url: an mxc uri for the user's avatar, if any.
+    #           none if the user has not set an avatar.
+    #
+    #     * user_profile.display_name: the user's display name. none if the user
+    #           has not set a display name.
+    #
+    # * html page which notifies the user that they are authenticating to confirm
+    #   an operation on their account during the user interactive authentication
+    #   process: 'sso_auth_confirm.html'.
+    #
+    #   when rendering, this template is given the following variables:
+    #     * redirect_url: the url the user is about to be redirected to.
+    #
+    #     * description: the operation which the user is being asked to confirm
+    #
+    #     * idp: details of the identity provider that we will use to confirm
+    #       the user's identity: an object with the following attributes:
+    #
+    #         * idp_id: unique identifier for the idp
+    #         * idp_name: user-facing name for the idp
+    #         * idp_icon: if specified in the idp config, an mxc uri for an icon
+    #              for the idp
+    #         * idp_brand: if specified in the idp config, a textual identifier
+    #              for the brand of the idp
+    #
+    # * html page shown after a successful user interactive authentication session:
+    #   'sso_auth_success.html'.
+    #
+    #   note that this page must include the javascript which notifies of a successful authentication
+    #   (see https://matrix.org/docs/spec/client_server/r0.6.0#fallback).
+    #
+    #   this template has no additional variables.
+    #
+    # * html page shown after a user-interactive authentication session which
+    #   does not map correctly onto the expected user: 'sso_auth_bad_user.html'.
+    #
+    #   when rendering, this template is given the following variables:
+    #     * server_name: the homeserver's name.
+    #     * user_id_to_verify: the mxid of the user that we are trying to
+    #       validate.
+    #
+    # * html page shown during single sign-on if a deactivated user (according to synapse's database)
+    #   attempts to login: 'sso_account_deactivated.html'.
+    #
+    #   this template has no additional variables.
+    #
+    # * html page to display to users if something goes wrong during the
+    #   openid connect authentication process: 'sso_error.html'.
+    #
+    #   when rendering, this template is given two variables:
+    #     * error: the technical name of the error
+    #     * error_description: a human-readable message for the error
+    #
+    # you can see the default templates at:
+    # https://github.com/matrix-org/synapse/tree/master/synapse/res/templates
+    #
+    #template_dir: "res/templates"
+
+
+# json web token integration. the following settings can be used to make
+# synapse json web tokens for authentication, instead of its internal
+# password database.
+#
+# each json web token needs to contain a "sub" (subject) claim, which is
+# used as the localpart of the mxid.
+#
+# additionally, the expiration time ("exp"), not before time ("nbf"),
+# and issued at ("iat") claims are validated if present.
+#
+# note that this is a non-standard login type and client support is
+# expected to be non-existent.
+#
+# see https://github.com/matrix-org/synapse/blob/master/docs/jwt.md.
+#
+#jwt_config:
+    # uncomment the following to enable authorization using json web
+    # tokens. defaults to false.
+    #
+    #enabled: true
+
+    # this is either the private shared secret or the public key used to
+    # decode the contents of the json web token.
+    #
+    # required if 'enabled' is true.
+    #
+    #secret: "provided-by-your-issuer"
+
+    # the algorithm used to sign the json web token.
+    #
+    # supported algorithms are listed at
+    # https://pyjwt.readthedocs.io/en/latest/algorithms.html
+    #
+    # required if 'enabled' is true.
+    #
+    #algorithm: "provided-by-your-issuer"
+
+    # the issuer to validate the "iss" claim against.
+    #
+    # optional, if provided the "iss" claim will be required and
+    # validated for all json web tokens.
+    #
+    #issuer: "provided-by-your-issuer"
+
+    # a list of audiences to validate the "aud" claim against.
+    #
+    # optional, if provided the "aud" claim will be required and
+    # validated for all json web tokens.
+    #
+    # note that if the "aud" claim is included in a json web token then
+    # validation will fail without configuring audiences.
+    #
+    #audiences:
+    #    - "provided-by-your-issuer"
+
+
+password_config:
+   # uncomment to disable password login
+   #
+   #enabled: false
+
+   # uncomment to disable authentication against the local password
+   # database. this is ignored if `enabled` is false, and is only useful
+   # if you have other password_providers.
+   #
+   #localdb_enabled: false
+
+   # uncomment and change to a secret random string for extra security.
+   # do not change this after initial setup!
+   #
+   #pepper: "even_more_secret"
+
+   # define and enforce a password policy. each parameter is optional.
+   # this is an implementation of msc2000.
+   #
+   policy:
+      # whether to enforce the password policy.
+      # defaults to 'false'.
+      #
+      #enabled: true
+
+      # minimum accepted length for a password.
+      # defaults to 0.
+      #
+      #minimum_length: 15
+
+      # whether a password must contain at least one digit.
+      # defaults to 'false'.
+      #
+      #require_digit: true
+
+      # whether a password must contain at least one symbol.
+      # a symbol is any character that's not a number or a letter.
+      # defaults to 'false'.
+      #
+      #require_symbol: true
+
+      # whether a password must contain at least one lowercase letter.
+      # defaults to 'false'.
+      #
+      #require_lowercase: true
+
+      # whether a password must contain at least one lowercase letter.
+      # defaults to 'false'.
+      #
+      #require_uppercase: true
+
+ui_auth:
+    # the amount of time to allow a user-interactive authentication session
+    # to be active.
+    #
+    # this defaults to 0, meaning the user is queried for their credentials
+    # before every action, but this can be overridden to allow a single
+    # validation to be re-used.  this weakens the protections afforded by
+    # the user-interactive authentication process, by allowing for multiple
+    # (and potentially different) operations to use the same validation session.
+    #
+    # uncomment below to allow for credential validation to last for 15
+    # seconds.
+    #
+    #session_timeout: "15s"
+
+
+# configuration for sending emails from synapse.
+#
+email:
+  # the hostname of the outgoing smtp server to use. defaults to 'localhost'.
+  #
+  #smtp_host: mail.server
+
+  # the port on the mail server for outgoing smtp. defaults to 25.
+  #
+  #smtp_port: 587
+
+  # username/password for authentication to the smtp server. by default, no
+  # authentication is attempted.
+  #
+  #smtp_user: "exampleusername"
+  #smtp_pass: "examplepassword"
+
+  # uncomment the following to require tls transport security for smtp.
+  # by default, synapse will connect over plain text, and will then switch to
+  # tls via starttls *if the smtp server supports it*. if this option is set,
+  # synapse will refuse to connect unless the server supports starttls.
+  #
+  #require_transport_security: true
+
+  # notif_from defines the "from" address to use when sending emails.
+  # it must be set if email sending is enabled.
+  #
+  # the placeholder '%(app)s' will be replaced by the application name,
+  # which is normally 'app_name' (below), but may be overridden by the
+  # matrix client application.
+  #
+  # note that the placeholder must be written '%(app)s', including the
+  # trailing 's'.
+  #
+  #notif_from: "your friendly %(app)s homeserver <noreply@example.com>"
+
+  # app_name defines the default value for '%(app)s' in notif_from and email
+  # subjects. it defaults to 'matrix'.
+  #
+  #app_name: my_branded_matrix_server
+
+  # uncomment the following to enable sending emails for messages that the user
+  # has missed. disabled by default.
+  #
+  #enable_notifs: true
+
+  # uncomment the following to disable automatic subscription to email
+  # notifications for new users. enabled by default.
+  #
+  #notif_for_new_users: false
+
+  # custom url for client links within the email notifications. by default
+  # links will be based on "https://matrix.to".
+  #
+  # (this setting used to be called riot_base_url; the old name is still
+  # supported for backwards-compatibility but is now deprecated.)
+  #
+  #client_base_url: "http://localhost/riot"
+
+  # configure the time that a validation email will expire after sending.
+  # defaults to 1h.
+  #
+  #validation_token_lifetime: 15m
+
+  # the web client location to direct users to during an invite. this is passed
+  # to the identity server as the org.matrix.web_client_location key. defaults
+  # to unset, giving no guidance to the identity server.
+  #
+  #invite_client_location: https://app.element.io
+
+  # directory in which synapse will try to find the template files below.
+  # if not set, or the files named below are not found within the template
+  # directory, default templates from within the synapse package will be used.
+  #
+  # synapse will look for the following templates in this directory:
+  #
+  # * the contents of email notifications of missed events: 'notif_mail.html' and
+  #   'notif_mail.txt'.
+  #
+  # * the contents of account expiry notice emails: 'notice_expiry.html' and
+  #   'notice_expiry.txt'.
+  #
+  # * the contents of password reset emails sent by the homeserver:
+  #   'password_reset.html' and 'password_reset.txt'
+  #
+  # * an html page that a user will see when they follow the link in the password
+  #   reset email. the user will be asked to confirm the action before their
+  #   password is reset: 'password_reset_confirmation.html'
+  #
+  # * html pages for success and failure that a user will see when they confirm
+  #   the password reset flow using the page above: 'password_reset_success.html'
+  #   and 'password_reset_failure.html'
+  #
+  # * the contents of address verification emails sent during registration:
+  #   'registration.html' and 'registration.txt'
+  #
+  # * html pages for success and failure that a user will see when they follow
+  #   the link in an address verification email sent during registration:
+  #   'registration_success.html' and 'registration_failure.html'
+  #
+  # * the contents of address verification emails sent when an address is added
+  #   to a matrix account: 'add_threepid.html' and 'add_threepid.txt'
+  #
+  # * html pages for success and failure that a user will see when they follow
+  #   the link in an address verification email sent when an address is added
+  #   to a matrix account: 'add_threepid_success.html' and
+  #   'add_threepid_failure.html'
+  #
+  # you can see the default templates at:
+  # https://github.com/matrix-org/synapse/tree/master/synapse/res/templates
+  #
+  #template_dir: "res/templates"
+
+  # subjects to use when sending emails from synapse.
+  #
+  # the placeholder '%(app)s' will be replaced with the value of the 'app_name'
+  # setting above, or by a value dictated by the matrix client application.
+  #
+  # if a subject isn't overridden in this configuration file, the value used as
+  # its example will be used.
+  #
+  #subjects:
+
+    # subjects for notification emails.
+    #
+    # on top of the '%(app)s' placeholder, these can use the following
+    # placeholders:
+    #
+    #   * '%(person)s', which will be replaced by the display name of the user(s)
+    #      that sent the message(s), e.g. "alice and bob".
+    #   * '%(room)s', which will be replaced by the name of the room the
+    #      message(s) have been sent to, e.g. "my super room".
+    #
+    # see the example provided for each setting to see which placeholder can be
+    # used and how to use them.
+    #
+    # subject to use to notify about one message from one or more user(s) in a
+    # room which has a name.
+    #message_from_person_in_room: "[%(app)s] you have a message on %(app)s from %(person)s in the %(room)s room..."
+    #
+    # subject to use to notify about one message from one or more user(s) in a
+    # room which doesn't have a name.
+    #message_from_person: "[%(app)s] you have a message on %(app)s from %(person)s..."
+    #
+    # subject to use to notify about multiple messages from one or more users in
+    # a room which doesn't have a name.
+    #messages_from_person: "[%(app)s] you have messages on %(app)s from %(person)s..."
+    #
+    # subject to use to notify about multiple messages in a room which has a
+    # name.
+    #messages_in_room: "[%(app)s] you have messages on %(app)s in the %(room)s room..."
+    #
+    # subject to use to notify about multiple messages in multiple rooms.
+    #messages_in_room_and_others: "[%(app)s] you have messages on %(app)s in the %(room)s room and others..."
+    #
+    # subject to use to notify about multiple messages from multiple persons in
+    # multiple rooms. this is similar to the setting above except it's used when
+    # the room in which the notification was triggered has no name.
+    #messages_from_person_and_others: "[%(app)s] you have messages on %(app)s from %(person)s and others..."
+    #
+    # subject to use to notify about an invite to a room which has a name.
+    #invite_from_person_to_room: "[%(app)s] %(person)s has invited you to join the %(room)s room on %(app)s..."
+    #
+    # subject to use to notify about an invite to a room which doesn't have a
+    # name.
+    #invite_from_person: "[%(app)s] %(person)s has invited you to chat on %(app)s..."
+
+    # subject for emails related to account administration.
+    #
+    # on top of the '%(app)s' placeholder, these one can use the
+    # '%(server_name)s' placeholder, which will be replaced by the value of the
+    # 'server_name' setting in your synapse configuration.
+    #
+    # subject to use when sending a password reset email.
+    #password_reset: "[%(server_name)s] password reset"
+    #
+    # subject to use when sending a verification email to assert an address's
+    # ownership.
+    #email_validation: "[%(server_name)s] validate your email"
+
+
+# password providers allow homeserver administrators to integrate
+# their synapse installation with existing authentication methods
+# ex. ldap, external tokens, etc.
+#
+# for more information and known implementations, please see
+# https://github.com/matrix-org/synapse/blob/master/docs/password_auth_providers.md
+#
+# note: instances wishing to use saml or cas authentication should
+# instead use the `saml2_config` or `cas_config` options,
+# respectively.
+#
+password_providers:
+#    # example config for an ldap auth provider
+#    - module: "ldap_auth_provider.ldapauthprovider"
+#      config:
+#        enabled: true
+#        uri: "ldap://ldap.example.com:389"
+#        start_tls: true
+#        base: "ou=users,dc=example,dc=com"
+#        attributes:
+#           uid: "cn"
+#           mail: "email"
+#           name: "givenname"
+#        #bind_dn:
+#        #bind_password:
+#        #filter: "(objectclass=posixaccount)"

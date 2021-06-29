@@ -6,14 +6,12 @@ spec:
   selector:
     matchLabels:
       app: synapse
-      org: jobmachine
   strategy: 
     type: Recreate
   template:
     metadata:
       labels:
         app: synapse
-        org: jobmachine
     spec:
       containers:
         - name: synapse
@@ -38,11 +36,11 @@ spec:
               - configMap:
                   name: synapse-primary-config-map
               - secret:
-                  name: jmsynapse-config-secrets
+                  name: synapse-config-secrets
         - name: synapse-data
           projected:
             sources:
               - configMap:
                   name: synapse-logging-config-map
               - secret:
-                  name: jmsynapse-data-secrets
+                  name: synapse-data-secrets
