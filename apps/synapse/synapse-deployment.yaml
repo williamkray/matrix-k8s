@@ -1,23 +1,3 @@
-## synapse service
-apiVersion: v1
-kind: Service
-metadata:
-  name: jmsynapse
-  labels:
-    app: synapse
-    org: jobmachine
-spec:
-  type: ClusterIP
-  ports:
-    - port: 8008
-      targetPort: 8008
-      name: synapse
-  selector:
-    app: synapse
-    org: jobmachine
-
----
-## synapse main process
 apiVersion: apps/v1
 kind: Deployment
 metadata:

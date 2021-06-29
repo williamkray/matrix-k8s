@@ -1,22 +1,3 @@
----
-## postgres service
-apiVersion: v1
-kind: Service
-metadata:
-  name: jmsynapsepsql
-  labels:
-    app: postgres
-    org: jobmachine
-spec:
-  ports:
-    - port: 5432
-      name: psql
-  clusterIP: None
-  selector:
-    app: postgres
-    org: jobmachine
-
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
