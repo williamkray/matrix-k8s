@@ -23,9 +23,15 @@ spec:
                   name: synapse-db-secrets
                   key: postgres-password
             - name: POSTGRES_USER
-              value: synapse_user
+              valueFrom:
+                secretKeyRef:
+                  name: synapse-db-secrets
+                  key: postgres-user
             - name: POSTGRES_DB
-              value: synapse
+              valueFrom:
+                secretKeyRef:
+                  name: synapse-db-secrets
+                  key: database-name
             - name: POSTGRES_INITDB_ARGS
               value: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
           ports:
