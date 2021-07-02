@@ -10,7 +10,7 @@ for domain in $homeservers ; do
   domain_var="${domain//\./}"
   echo "copying template files into place for ${domain}"
   mkdir -p apps/synapse/overlays/"${domain}"
-  cp -r apps/synapse/base/{kustomization.yaml,configs,secrets} apps/synapse/overlays/"${domain}"/
+  cp -r apps/synapse/base/overlay_artifacts/* apps/synapse/overlays/"${domain}"/
   # space separated list of variable ids to substitute
   var_id="prefix namespace organization synapse_db_name synapse_db_user synapse_db_password"
   for id in $var_id; do
