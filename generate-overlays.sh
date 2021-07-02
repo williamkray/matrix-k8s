@@ -21,8 +21,8 @@ for domain in $homeservers ; do
       # this sed command should replace all instances of the vars in kustomization.yaml and config/secret directories
       sed -i "s/<REPLACE_WITH_${id^^}>/${this_var}/g" \
         apps/synapse/overlays/${domain}/kustomization.yaml \
-        apps/synapse/overlays/${domain}/configs/*/*.yaml \
-        apps/synapse/overlays/${domain}/secrets/*/*.yaml
+        apps/synapse/overlays/${domain}/configs/*/* \
+        apps/synapse/overlays/${domain}/secrets/*/*
     else
       echo "${domain_var}_${id} variable is unset!" 
       echo "skipping this substitution. please manually update your files,"
