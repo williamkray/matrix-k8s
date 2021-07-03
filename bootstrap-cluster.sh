@@ -9,6 +9,7 @@ fi
 
 ## versions of stuff
 ingress_version="v0.47.0"
+prometheus_operator_version="v0.8.0"
 
 ## bootstrap a kubernetes cluster with the necessary prereqs to run these matrix and related components
 
@@ -29,12 +30,28 @@ install_nginx-ingress() {
       exit 1
       ;;
   esac
+
+  echo 'nginx ingress deployed to k8s!'
 }
 
 install_prometheus() {
-  echo "installing prometheus..."
+  echo "installing prometheus operator..."
+  mkdir -p bootstraps # just in case it's not there yet
+  pushd bootstraps
+    if [[ -d kube-prometheus ]]; then
+      cd kube-prometheus
+      git fetch
+      git checkout ${prometheus_operator_version}
+    else
+      git clone https://github.com/prometheus-operator/kube-prometheus.git
+      cd kube-prometheus
+      git checkout ${prometheus_operator_version}
+    fi
+  popd
+  kubectl apply -f bootstraps/kube-prometheus/manifests
+  echo 'prometheus operator deployed to k8s!'
 }
 
 
 install_nginx-ingress
-#install_prometheus
+install_prometheus
