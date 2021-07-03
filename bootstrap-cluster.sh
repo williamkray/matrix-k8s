@@ -52,6 +52,6 @@ install_prometheus() {
   echo 'prometheus operator deployed to k8s!'
 }
 
-
+## run the functions we've defined up above. comment any of these steps out if you don't want to do them.
 install_nginx-ingress
 install_prometheus
