@@ -3,7 +3,9 @@ set -e
 
 engine="$1"
 if [[ -z "$engine" ]]; then
-  echo "you must supply an engine, either minikube, doke, or lke"
+  echo "you must supply an engine. supported kubernetes engines are:"
+  echo -e "minikube\ndoke\nlke"
+  echo "AWS EKS is currently not supported."
   exit 1
 fi
 
@@ -26,7 +28,7 @@ install_nginx-ingress() {
       kubectl apply -f networking/deploy-ingress-nginx.yaml
       ;;
     *)
-      echo "kubernetes engine is either not set, or unrecognized. exiting."
+      echo "kubernetes engine is unrecognized. exiting."
       exit 1
       ;;
   esac
