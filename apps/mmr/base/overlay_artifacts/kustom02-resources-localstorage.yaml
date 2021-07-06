@@ -1,0 +1,4 @@
+resources:
+  - ../../base
+  - ../../base/mmr-pvc.yaml
+

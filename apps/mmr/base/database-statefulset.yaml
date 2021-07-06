@@ -23,9 +23,15 @@ spec:
                   name: mmr-db-secrets
                   key: postgres-password
             - name: POSTGRES_USER
-              value: mediarepo
+              valueFrom:
+                secretKeyRef:
+                  name: mmr-db-secrets
+                  key: postgres-user
             - name: POSTGRES_DB
-              value: mediarepo
+              valueFrom:
+                secretKeyRef:
+                  name: mmr-db-secrets
+                  key: database-name
           ports:
             - containerPort: 5432
               name: psql

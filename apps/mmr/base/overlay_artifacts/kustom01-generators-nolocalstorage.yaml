@@ -30,10 +30,3 @@ secretGenerator:
     envs:
       - secrets/database/db-credentials.env
 
-resources:
-  - ../../base
-  # include local-storage in dev-only overlays
-  - ../../base/mmr-pvc.yaml
-
-patches:
-  - use-local-storage.yaml

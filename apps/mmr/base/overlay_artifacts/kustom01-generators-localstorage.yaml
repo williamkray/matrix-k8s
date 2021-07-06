@@ -6,6 +6,7 @@ configMapGenerator:
       - configs/mmr/04-accesstokens.yaml
       - configs/mmr/05-admins.yaml
       - configs/mmr/06-sharedsecretauth.yaml
+      - configs/mmr/07-localstorage.yaml
       - configs/mmr/08-archiving.yaml
       - configs/mmr/09-uploads.yaml
       - configs/mmr/10-downloads.yaml
@@ -24,16 +25,8 @@ secretGenerator:
   - name: mmr-config-secrets
     files:
       - secrets/mmr/02-database.yaml
-      - secrets/mmr/07-s3datastores.yaml
 
   - name: mmr-db-secrets
     envs:
       - secrets/database/db-credentials.env
 
-resources:
-  - ../../base
-  # include local-storage in dev-only overlays
-  - ../../base/mmr-pvc.yaml
-
-patches:
-  - use-local-storage.yaml

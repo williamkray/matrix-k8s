@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 
+set -e
+
 # this script will generate kustomize overlays for your stacks, and substitute placeholder values of various secrets in
 # config files with your actual secrets as set in your variables.env file.
 
 source variables.env
 
+## SYNAPSE ##
 # copy base files into place as an overlay
 for domain in $homeservers ; do 
   domain_var="${domain//\./}"
@@ -30,3 +33,53 @@ for domain in $homeservers ; do
     fi
   done
 done
+
+## MATRIX-MEDIA-REPO ##
+if [[ "$mmr_multitenant" == true ]]; then
+  tenant="multitenant"
+  ## generate kustomization.yaml and copy proper config files
+  if [[ "$mmr_multitenant_local_storage" == true ]]; then
+    storage_type="localstorage"
+    overlay_dir="${tenant}_${storage_type}"
+    kustom_bits="kustom00-common.yaml kustom01-generators-localstorage.yaml kustom02-resources-localstorage.yaml kustom03-patches-localstorage.yaml"
+    patches="patch01-use-local-storage.yaml"
+  else
+    storage_type="s3storage"
+    overlay_dir="${tenant}_${storage_type}"
+    kustom_bits="kustom00-common.yaml kustom01-generators-nolocalstorage.yaml kustom02-resources-nolocalstorage.yaml"
+    patches=""
+  fi
+
+  echo "configuring overlay ${overlay_dir}..."
+  rm -f apps/mmr/overlays/${overlay_dir}/kustomization.yaml
+  mkdir -p apps/mmr/overlays/${overlay_dir}
+  for bit in $kustom_bits; do
+    cat apps/mmr/base/overlay_artifacts/$bit >> apps/mmr/overlays/${overlay_dir}/kustomization.yaml
+  done
+  for patch in $patches; do
+    cp apps/mmr/base/overlay_artifacts/$patch apps/mmr/overlays/${overlay_dir}/
+  done
+  cp -r apps/mmr/base/overlay_artifacts/{configs,secrets} apps/mmr/overlays/${overlay_dir}/
+
+  # swap out variables in secrets/configmaps
+  var_id="namespace local_storage local_storage_size s3_bucket_name s3_access_key s3_secret_key s3_endpoint db_name \
+    db_user db_password"
+  for id in $var_id; do
+    # creative variable evaluation magic
+    this_var=$(eval echo -n \$"mmr_${tenant}_${id}")
+    if [[ -n "$this_var" ]]; then
+      echo "replacing instances of mmr_${tenant}_${id}"
+      # this sed command should replace all instances of the vars in kustomization.yaml and config/secret directories
+      sed -i "s/<REPLACE_WITH_MMR_${id^^}>/${this_var}/g" \
+        apps/mmr/overlays/${overlay_dir}/kustomization.yaml \
+        apps/mmr/overlays/${overlay_dir}/configs/*/* \
+        apps/mmr/overlays/${overlay_dir}/secrets/*/*
+    else
+      echo "${domain_var}_${id} variable is unset!" 
+      echo "skipping this substitution. please manually update your files,"
+      echo "or update your variables.env file and rerun this script."
+    fi
+  done
+else
+  echo "you chose single-tenant deployment of matrix-media-repo. support for this is not ready yet. you're on your own, kid."
+fi
