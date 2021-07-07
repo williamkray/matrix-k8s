@@ -2,5 +2,4 @@ resources:
   - database-service.yaml
   - database-statefulset.yaml
   - mmr-deployment.yaml
-  - mmr-ingress.yaml
   - mmr-service.yaml

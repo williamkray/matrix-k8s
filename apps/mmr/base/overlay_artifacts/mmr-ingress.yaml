@@ -1,14 +1,14 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: mmr-ingress
+  name: mmr-<REPLACE_WITH_MMR_HOMESERVER_STRIPPED>-ingress
   annotations:
     kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/configuration-snippet: |
-      more_set_headers "X-Forwarded-Host: example.com";
+      proxy_set_header X-Forwarded-Host <REPLACE_WITH_MMR_HOMESERVER>;
 spec:
   rules:
-    - host: synapse.example.com
+    - host: synapse.<REPLACE_WITH_MMR_HOMESERVER>
       http:
         paths:
           - path: /_matrix/media

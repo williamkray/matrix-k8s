@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mmr-local-storage
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  storageClassName: standard
+  resources:
+    requests:
+      storage: <REPLACE_WITH_MMR_LOCAL_STORAGE_SIZE>
