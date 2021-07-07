@@ -47,4 +47,3 @@ resources:
   - database-statefulset.yaml
   - synapse-deployment.yaml
   - synapse-service.yaml
-  - synapse-ingress.yaml

@@ -4,11 +4,9 @@ metadata:
   name: synapse-ingress
   annotations:
     kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      more_set_headers "X-Forwarded-Host: example.com";
 spec:
   rules:
-    - host: synapse.example.com
+    - host: synapse.<REPLACE_WITH_SYNAPSE_HOMESERVER>
       http:
         paths:
           - path: /
@@ -19,12 +17,3 @@ spec:
                 port: 
                   # example using port name
                   name: synapse
-#         - path: /_matrix_media
-#           pathType: Prefix
-#           backend:
-#             service:
-#               name: matrixmediarepo
-#               port:
-#                 # example using port number
-#                 number: 8000
-

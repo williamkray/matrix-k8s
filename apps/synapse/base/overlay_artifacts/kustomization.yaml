@@ -43,3 +43,4 @@ secretGenerator:
 
 resources:
   - ../../base
+  - synapse-ingress.yaml

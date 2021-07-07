@@ -14,6 +14,9 @@ for domain in $homeservers ; do
   echo "copying template files into place for ${domain}"
   mkdir -p apps/synapse/overlays/"${domain}"
   cp -rn apps/synapse/base/overlay_artifacts/* apps/synapse/overlays/"${domain}"/
+  # this sed command tackles just the ingress files
+  sed -i "s/<REPLACE_WITH_SYNAPSE_HOMESERVER>/${domain}/g" apps/synapse/overlays/${domain}/synapse-ingress.yaml
+  sed -i "s/<REPLACE_WITH_SYNAPSE_HOMESERVER_STRIPPED>/${domain_var}/g" apps/synapse/overlays/${domain}/synapse-ingress.yaml
   # space separated list of variable ids to substitute
   var_id="prefix namespace organization synapse_db_name synapse_db_user synapse_db_password"
   for id in $var_id; do
@@ -63,13 +66,14 @@ if [[ "$mmr_multitenant" == true ]]; then
   done
   cp -rn apps/mmr/base/overlay_artifacts/{configs,secrets} apps/mmr/overlays/${overlay_dir}/
   for homeserver in $mmr_homeservers; do
+    prefix=$(eval echo -n \$"${homeserver//\./}_prefix")
     echo "generating ingress resource for ${homeserver}"
     cp -n apps/mmr/base/overlay_artifacts/mmr-ingress.yaml \
       apps/mmr/overlays/${overlay_dir}/ingresses/mmr_${homeserver//\./}_ingress.yaml
     sed -i "s/<REPLACE_WITH_MMR_HOMESERVER>/${homeserver}/g" \
       apps/mmr/overlays/${overlay_dir}/ingresses/mmr_${homeserver//\./}_ingress.yaml
-    # also set a stripped version for the ingress object name
-    sed -i "s/<REPLACE_WITH_MMR_HOMESERVER_STRIPPED>/${homeserver//\./}/g" \
+    # do some manual work to use the domain prefix here to match synapse ingress rule naming convention
+    sed -i "s/<REPLACE_WITH_PREFIX>/${prefix}/g" \
       apps/mmr/overlays/${overlay_dir}/ingresses/mmr_${homeserver//\./}_ingress.yaml
   done
   echo "resources:" > apps/mmr/overlays/${overlay_dir}/ingresses/kustomization.yaml
