@@ -95,7 +95,6 @@ if [[ "$mmr_multitenant" == true ]]; then
   echo "resources:" > apps/mmr/overlays/${overlay_dir}/ingresses/kustomization.yaml
   find apps/mmr/overlays/${overlay_dir}/ingresses/ -type f -name *_ingress.yaml -execdir echo "  - {}" >> \
     apps/mmr/overlays/${overlay_dir}/ingresses/kustomization.yaml \;
-    echo "  - $file"
   # generate an admins config file
   echo "admins:" > apps/mmr/overlays/${overlay_dir}/configs/mmr/05-admins.yaml
   for user in $(eval echo -n \$"mmr_${tenant}_admins"); do
