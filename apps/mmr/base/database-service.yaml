@@ -3,11 +3,11 @@ kind: Service
 metadata:
   name: mmr-psql
   labels:
-    app: postgres
+    app: mmr-psql
 spec:
   ports:
     - port: 5432
       name: psql
   clusterIP: None
   selector:
-    app: postgres
+    app: mmr-psql

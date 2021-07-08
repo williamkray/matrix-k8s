@@ -65,7 +65,10 @@ if [[ "$mmr_multitenant" == true ]]; then
     cp -n apps/mmr/base/overlay_artifacts/$patch apps/mmr/overlays/${overlay_dir}/
   done
   cp -rn apps/mmr/base/overlay_artifacts/{configs,secrets} apps/mmr/overlays/${overlay_dir}/
+  # start with a fresh "homeservers" config
+  echo 'homeservers:' > apps/mmr/overlays/${overlay_dir}/configs/mmr/03-homeservers.yaml
   for homeserver in $mmr_homeservers; do
+    # generate ingress objects for each homeserver
     prefix=$(eval echo -n \$"${homeserver//\./}_prefix")
     echo "generating ingress resource for ${homeserver}"
     cp -n apps/mmr/base/overlay_artifacts/mmr-ingress.yaml \
@@ -75,11 +78,21 @@ if [[ "$mmr_multitenant" == true ]]; then
     # do some manual work to use the domain prefix here to match synapse ingress rule naming convention
     sed -i "s/<REPLACE_WITH_PREFIX>/${prefix}/g" \
       apps/mmr/overlays/${overlay_dir}/ingresses/mmr_${homeserver//\./}_ingress.yaml
+
+    # generate a homeservers.yaml config that includes all homeservers
+    echo -e "  - name: ${homeserver}\n    csApi: https://synapse.${homeserver}\n" \
+      >> apps/mmr/overlays/${overlay_dir}/configs/mmr/03-homeservers.yaml
   done
+  # include ingress object manifests in kustomization
   echo "resources:" > apps/mmr/overlays/${overlay_dir}/ingresses/kustomization.yaml
   find apps/mmr/overlays/${overlay_dir}/ingresses/ -type f -name *_ingress.yaml -execdir echo "  - {}" >> \
     apps/mmr/overlays/${overlay_dir}/ingresses/kustomization.yaml \;
     echo "  - $file"
+  # generate an admins config file
+  echo "admins:" > apps/mmr/overlays/${overlay_dir}/configs/mmr/05-admins.yaml
+  for user in $(eval echo -n \$"mmr_${tenant}_admins"); do
+    echo "  - \"${user}"\" >> apps/mmr/overlays/${overlay_dir}/configs/mmr/05-admins.yaml
+  done
 
 
   # swap out variables in secrets/configmaps

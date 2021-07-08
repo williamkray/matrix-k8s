@@ -1,3 +1,5 @@
+# This file is overwritten by generate-overlays.sh
+# This is left here as a generic example
 # These users have full access to the administrative functions of the media repository.
 # See docs/admin.md for information on what these people can do. They must belong to one of the
 # configured homeservers above.
