@@ -12,6 +12,7 @@ fi
 ## versions of stuff
 ingress_version="v0.47.0"
 prometheus_operator_version="v0.8.0"
+certmanager_version="v1.4.0"
 
 ## bootstrap a kubernetes cluster with the necessary prereqs to run these matrix and related components
 
@@ -60,6 +61,14 @@ install_prometheus() {
   echo 'prometheus operator deployed to k8s!'
 }
 
+install_certmanager() {
+  echo "installing cert-manager..."
+  kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/${certmanager_version}/cert-manager.yaml
+  echo 'cert-manager deployed to k8s!'
+
+}
+
 ## run the functions we've defined up above. comment any of these steps out if you don't want to do them.
 install_nginx-ingress
 install_prometheus
+install_certmanager
