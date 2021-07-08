@@ -4,8 +4,16 @@ set -e
 
 # this script will generate kustomize overlays for your stacks, and substitute placeholder values of various secrets in
 # config files with your actual secrets as set in your variables.env file.
+# pass a file with variable values to source custom values.
 
-source variables.env
+if [[ -n "$1" ]] && [[ -f "$1" ]]; then
+  vars_file="$1"
+else
+  echo "no argument received"
+  vars_file="./variables.env"
+fi
+echo "sourcing variables from $vars_file"
+source $vars_file
 
 ## SYNAPSE ##
 # copy base files into place as an overlay
