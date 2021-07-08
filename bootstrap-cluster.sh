@@ -50,6 +50,12 @@ install_prometheus() {
       git checkout ${prometheus_operator_version}
     fi
   popd
+  kubectl apply -f bootstraps/kube-prometheus/manifests/setup
+  until kubectl get servicemonitors --all-namespaces ; do
+    date
+    sleep 1
+    echo ""
+  done
   kubectl apply -f bootstraps/kube-prometheus/manifests
   echo 'prometheus operator deployed to k8s!'
 }
