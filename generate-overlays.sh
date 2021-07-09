@@ -21,12 +21,22 @@ for domain in $homeservers ; do
   domain_var="${domain//\./}"
   echo "copying template files into place for ${domain}"
   mkdir -p apps/synapse/overlays/"${domain}"
-  cp -rn apps/synapse/base/overlay_artifacts/* apps/synapse/overlays/"${domain}"/
+  cp -r apps/synapse/base/overlay_artifacts/* apps/synapse/overlays/"${domain}"/
   # this sed command tackles just the ingress files
   sed -i "s/<REPLACE_WITH_SYNAPSE_HOMESERVER>/${domain}/g" apps/synapse/overlays/${domain}/synapse-ingress.yaml
   sed -i "s/<REPLACE_WITH_SYNAPSE_HOMESERVER_STRIPPED>/${domain_var}/g" apps/synapse/overlays/${domain}/synapse-ingress.yaml
+  # lets-encrypt options
+  # i'm doing it this way because i'm too lazy to do it properly like i did for mmr below
+  if [[ $(eval echo -n \$"${domain_var}_use_le") == true ]]; then
+    if ! [[ $(eval echo -n \$"${domain_var}_le_staging") == false ]]; then
+      eval ${domain_var}_le_staging_val='-staging-'
+    else
+      eval ${domain_var}_le_staging_val='-'
+    fi
+    echo -e "patches:\n  - patch01-acme-cert-issuer.yaml" >> apps/synapse/overlays/${domain}/kustomization.yaml
+  fi
   # space separated list of variable ids to substitute
-  var_id="prefix namespace organization synapse_db_name synapse_db_user synapse_db_password"
+  var_id="prefix namespace organization le_staging_val acme_email synapse_db_name synapse_db_user synapse_db_password"
   for id in $var_id; do
     # creative variable evaluation magic
     this_var=$(eval echo -n \$"${domain_var}_${id}")
@@ -70,16 +80,16 @@ if [[ "$mmr_multitenant" == true ]]; then
     cat apps/mmr/base/overlay_artifacts/$bit >> apps/mmr/overlays/${overlay_dir}/kustomization.yaml
   done
   for patch in $patches; do
-    cp -n apps/mmr/base/overlay_artifacts/$patch apps/mmr/overlays/${overlay_dir}/
+    cp apps/mmr/base/overlay_artifacts/$patch apps/mmr/overlays/${overlay_dir}/
   done
-  cp -rn apps/mmr/base/overlay_artifacts/{configs,secrets} apps/mmr/overlays/${overlay_dir}/
+  cp -r apps/mmr/base/overlay_artifacts/{configs,secrets} apps/mmr/overlays/${overlay_dir}/
   # start with a fresh "homeservers" config
   echo 'homeservers:' > apps/mmr/overlays/${overlay_dir}/configs/mmr/03-homeservers.yaml
   for homeserver in $mmr_homeservers; do
     # generate ingress objects for each homeserver
     prefix=$(eval echo -n \$"${homeserver//\./}_prefix")
     echo "generating ingress resource for ${homeserver}"
-    cp -n apps/mmr/base/overlay_artifacts/mmr-ingress.yaml \
+    cp apps/mmr/base/overlay_artifacts/mmr-ingress.yaml \
       apps/mmr/overlays/${overlay_dir}/ingresses/mmr_${homeserver//\./}_ingress.yaml
     sed -i "s/<REPLACE_WITH_MMR_HOMESERVER>/${homeserver}/g" \
       apps/mmr/overlays/${overlay_dir}/ingresses/mmr_${homeserver//\./}_ingress.yaml
