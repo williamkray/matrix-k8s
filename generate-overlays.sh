@@ -26,6 +26,8 @@ for domain in $homeservers ; do
   sed -i "s/<REPLACE_WITH_SYNAPSE_HOMESERVER>/${domain}/g" apps/synapse/overlays/${domain}/synapse-ingress.yaml
   sed -i "s/<REPLACE_WITH_SYNAPSE_HOMESERVER_STRIPPED>/${domain_var}/g" apps/synapse/overlays/${domain}/synapse-ingress.yaml
   # lets-encrypt options
+  # set a value just so we don't get an annoying complaint message when it doesn't matter
+  eval ${domain_var}_le_staging_val='-staging-'
   # i'm doing it this way because i'm too lazy to do it properly like i did for mmr below
   if [[ $(eval echo -n \$"${domain_var}_use_le") == true ]]; then
     if ! [[ $(eval echo -n \$"${domain_var}_le_staging") == false ]]; then
@@ -36,7 +38,7 @@ for domain in $homeservers ; do
     echo -e "patches:\n  - patch01-acme-cert-issuer.yaml" >> apps/synapse/overlays/${domain}/kustomization.yaml
   fi
   # space separated list of variable ids to substitute
-  var_id="prefix namespace organization le_staging_val acme_email synapse_db_name synapse_db_user synapse_db_password"
+  var_id="prefix namespace organization domain le_staging_val acme_email synapse_db_name synapse_db_user synapse_db_password"
   for id in $var_id; do
     # creative variable evaluation magic
     this_var=$(eval echo -n \$"${domain_var}_${id}")
@@ -88,6 +90,8 @@ if [[ "$mmr_multitenant" == true ]]; then
   for homeserver in $mmr_homeservers; do
     # generate ingress objects for each homeserver
     prefix=$(eval echo -n \$"${homeserver//\./}_prefix")
+    namespace=$(eval echo -n \$"${homeserver//\./}_namespace")
+    service_uri="http://${prefix}synapse.${namespace}.svc.cluster.local"
     echo "generating ingress resource for ${homeserver}"
     cp apps/mmr/base/overlay_artifacts/mmr-ingress.yaml \
       apps/mmr/overlays/${overlay_dir}/ingresses/mmr_${homeserver//\./}_ingress.yaml
@@ -98,7 +102,7 @@ if [[ "$mmr_multitenant" == true ]]; then
       apps/mmr/overlays/${overlay_dir}/ingresses/mmr_${homeserver//\./}_ingress.yaml
 
     # generate a homeservers.yaml config that includes all homeservers
-    echo -e "  - name: ${homeserver}\n    csApi: https://synapse.${homeserver}\n" \
+    echo -e "  - name: ${homeserver}\n    csApi: ${service_uri}:8008\n    adminApiKind: synapse\n" \
       >> apps/mmr/overlays/${overlay_dir}/configs/mmr/03-homeservers.yaml
   done
   # include ingress object manifests in kustomization

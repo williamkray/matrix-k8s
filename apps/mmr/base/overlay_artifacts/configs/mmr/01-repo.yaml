@@ -27,7 +27,7 @@ repo:
   # If false, the media repo will not use the X-Forwarded-Host header commonly added by reverse proxies.
   # Typically this should remain as true, though in some circumstances it may need to be disabled.
   # See https://github.com/turt2live/matrix-media-repo/issues/202 for more information.
-  useForwardedHost: true
+  useForwardedHost: false
                                                                                                          
 # Options for dealing with federation
 federation:

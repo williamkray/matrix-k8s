@@ -18,7 +18,7 @@
 # lowercase and may contain an explicit port.
 # Examples: matrix.org, localhost:8080
 #
-server_name: "example.org"
+server_name: "<REPLACE_WITH_DOMAIN>"
 
 # When running as a daemon, the file to store the pid in
 #

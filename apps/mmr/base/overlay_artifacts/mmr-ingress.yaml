@@ -4,19 +4,17 @@ metadata:
   name: <REPLACE_WITH_PREFIX>mmr-ingress
   annotations:
     kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      proxy_set_header X-Forwarded-Host <REPLACE_WITH_MMR_HOMESERVER>;
+    nginx.ingress.kubernetes.io/upstream-vhost: <REPLACE_WITH_MMR_HOMESERVER>
 spec:
   rules:
     - host: synapse.<REPLACE_WITH_MMR_HOMESERVER>
       http:
         paths:
-          - path: /_matrix/media
+          - path: /_matrix/media/
             pathType: Prefix
             backend:
               service:
                 name: mmr
                 port:
-                  # example using port number
                   number: 8000
 
