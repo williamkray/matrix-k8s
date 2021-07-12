@@ -1,0 +1,13 @@
+namePrefix: <REPLACE_WITH_PREFIX>
+namespace: <REPLACE_WITH_NAMESPACE>
+commonLabels:
+  organization: <REPLACE_WITH_ORGANIZATION>
+
+configMapGenerator:
+  - name: nginx-configmap
+    files:
+      - configs/nginx/matrix.conf
+
+resources:
+  - ../../base
+  - nginx-ingress.yaml

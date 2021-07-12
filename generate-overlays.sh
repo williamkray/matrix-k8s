@@ -37,8 +37,14 @@ for domain in $homeservers ; do
     fi
     echo -e "patches:\n  - patch01-acme-cert-issuer.yaml" >> apps/synapse/overlays/${domain}/kustomization.yaml
   fi
+
+  # we need to process nginx as well for federation to work
+  mkdir -p apps/nginx/overlays/"${domain}"
+  cp -r apps/nginx/base/overlay_artifacts/* apps/nginx/overlays/"${domain}"
+
   # space separated list of variable ids to substitute
-  var_id="prefix namespace organization domain le_staging_val acme_email synapse_db_name synapse_db_user synapse_db_password"
+  var_id="prefix namespace organization domain le_staging_val acme_email synapse_db_name synapse_db_user
+    synapse_db_password jitsi_domain"
   for id in $var_id; do
     # creative variable evaluation magic
     this_var=$(eval echo -n \$"${domain_var}_${id}")
@@ -48,7 +54,9 @@ for domain in $homeservers ; do
       sed -i "s/<REPLACE_WITH_${id^^}>/${this_var}/g" \
         apps/synapse/overlays/${domain}/*.yaml \
         apps/synapse/overlays/${domain}/configs/*/* \
-        apps/synapse/overlays/${domain}/secrets/*/*
+        apps/synapse/overlays/${domain}/secrets/*/* \
+        apps/nginx/overlays/${domain}/*.yaml \
+        apps/nginx/overlays/${domain}/configs/*/* 
     else
       echo "${domain_var}_${id} variable is unset!" 
       echo "skipping this substitution. please manually update your files,"

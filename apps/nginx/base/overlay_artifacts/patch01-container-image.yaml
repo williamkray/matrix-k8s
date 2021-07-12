@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: cert-issuer
+spec:
+  $patch: replace
+  acme:
+    email: <REPLACE_WITH_ACME_EMAIL>
+    server: https://acme<REPLACE_WITH_LE_STAGING_VAL>v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: <REPLACE_WITH_PREFIX>issuer-account-key
+    solvers:
+      - http01:
+          ingress:
+            class: nginx

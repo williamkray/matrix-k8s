@@ -1,0 +1,5 @@
+namePrefix: 
+namespace: default
+resources:
+  - nginx-deployment.yaml
+  - nginx-service.yaml
