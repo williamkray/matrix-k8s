@@ -44,14 +44,14 @@ for domain in $homeservers ; do
 
   # space separated list of variable ids to substitute
   var_id="prefix namespace organization domain le_staging_val acme_email synapse_db_name synapse_db_user
-    synapse_db_password jitsi_domain"
+    synapse_db_password jitsi_domain nginx_image nginx_image_tag"
   for id in $var_id; do
     # creative variable evaluation magic
     this_var=$(eval echo -n \$"${domain_var}_${id}")
     if [[ -n "$this_var" ]]; then
       echo "replacing instances of <REPLACE_WITH_${id^^}> with ${this_var}"
       # this sed command should replace all instances of the vars in kustomization.yaml and config/secret directories
-      sed -i "s/<REPLACE_WITH_${id^^}>/${this_var}/g" \
+      sed -i "s#<REPLACE_WITH_${id^^}>#${this_var}#g" \
         apps/synapse/overlays/${domain}/*.yaml \
         apps/synapse/overlays/${domain}/configs/*/* \
         apps/synapse/overlays/${domain}/secrets/*/* \

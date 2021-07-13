@@ -11,3 +11,8 @@ configMapGenerator:
 resources:
   - ../../base
   - nginx-ingress.yaml
+
+images:
+  - name: "nginx"
+    newName: "<REPLACE_WITH_NGINX_IMAGE>"
+    newTag: "<REPLACE_WITH_NGINX_IMAGE_TAG>"
