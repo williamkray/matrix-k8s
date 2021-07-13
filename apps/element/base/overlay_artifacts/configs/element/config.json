@@ -1,0 +1,13 @@
+{
+  "default_server_config": {
+    "m.homeserver": {
+      "base_url": "https://synapse.<REPLACE_WITH_DOMAIN>",
+      "server_name": "<REPLACE_WITH_DOMAIN>"
+    }
+  },
+  "showLabsSettings": true,
+  "default_theme": "dark",
+  "jitsi": {
+    "preferredDomain": "<REPLACE_WITH_JITSI_DOMAIN>"
+  }
+}

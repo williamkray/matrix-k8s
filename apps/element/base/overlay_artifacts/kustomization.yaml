@@ -1,0 +1,18 @@
+namePrefix: <REPLACE_WITH_PREFIX>
+namespace: <REPLACE_WITH_NAMESPACE>
+commonLabels:
+  organization: <REPLACE_WITH_ORGANIZATION>
+
+configMapGenerator:
+  - name: element-configmap
+    files:
+      - configs/element/config.json
+
+resources:
+  - ../../base
+  - element-ingress.yaml
+
+images:
+  - name: "element"
+    newName: "<REPLACE_WITH_ELEMENT_IMAGE>"
+    newTag: "<REPLACE_WITH_ELEMENT_IMAGE_TAG>"

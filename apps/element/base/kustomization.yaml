@@ -1,0 +1,10 @@
+namePrefix: 
+namespace: default
+resources:
+  - element-deployment.yaml
+  - element-service.yaml
+
+images:
+  - name: "element"
+    newName: "<REPLACE_WITH_ELEMENT_IMAGE>"
+    newTag: "<REPLACE_WITH_ELEMENT_IMAGE_TAG>"

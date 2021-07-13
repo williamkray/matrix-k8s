@@ -42,9 +42,13 @@ for domain in $homeservers ; do
   mkdir -p apps/nginx/overlays/"${domain}"
   cp -r apps/nginx/base/overlay_artifacts/* apps/nginx/overlays/"${domain}"
 
+  # lets take care of element-web as well here and re-use variables
+  mkdir -p apps/element/overlays/"${domain}"
+  cp -r apps/element/base/overlay_artifacts/* apps/element/overlays/"${domain}"
+
   # space separated list of variable ids to substitute
   var_id="prefix namespace organization domain le_staging_val acme_email synapse_db_name synapse_db_user
-    synapse_db_password jitsi_domain nginx_image nginx_image_tag"
+    synapse_db_password jitsi_domain nginx_image nginx_image_tag element_image element_image_tag"
   for id in $var_id; do
     # creative variable evaluation magic
     this_var=$(eval echo -n \$"${domain_var}_${id}")
@@ -56,7 +60,9 @@ for domain in $homeservers ; do
         apps/synapse/overlays/${domain}/configs/*/* \
         apps/synapse/overlays/${domain}/secrets/*/* \
         apps/nginx/overlays/${domain}/*.yaml \
-        apps/nginx/overlays/${domain}/configs/*/* 
+        apps/nginx/overlays/${domain}/configs/*/* \
+        apps/element/overlays/${domain}/*.yaml \
+        apps/element/overlays/${domain}/configs/*/*
     else
       echo "${domain_var}_${id} variable is unset!" 
       echo "skipping this substitution. please manually update your files,"

@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: element-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/issuer: <REPLACE_WITH_PREFIX>cert-issuer
+spec:
+  rules:
+    - host: app.<REPLACE_WITH_DOMAIN>
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: 
+                name: element
+                port: 
+                  # example using port name
+                  name: element
+  tls:
+    - hosts:
+        - app.<REPLACE_WITH_DOMAIN>
+      secretName: <REPLACE_WITH_PREFIX>element-ssl
