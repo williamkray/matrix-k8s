@@ -14,12 +14,14 @@ else
 fi
 echo "sourcing variables from $vars_file"
 source $vars_file
+loki_version='loki-2.5.2'
 
-## SYNAPSE ##
+## Namespaced Resources ##
 # copy base files into place as an overlay
 for domain in $homeservers ; do 
   domain_var="${domain//\./}"
-  echo "copying template files into place for ${domain}"
+  ## synapse
+  echo "copying synapse template files into place for ${domain}"
   mkdir -p apps/synapse/overlays/"${domain}"
   cp -r apps/synapse/base/overlay_artifacts/* apps/synapse/overlays/"${domain}"/
   # this sed command tackles just the ingress files
@@ -39,10 +41,12 @@ for domain in $homeservers ; do
   fi
 
   # we need to process nginx as well for federation to work
+  echo "copying nginx template files into place for ${domain}"
   mkdir -p apps/nginx/overlays/"${domain}"
   cp -r apps/nginx/base/overlay_artifacts/* apps/nginx/overlays/"${domain}"
 
   # lets take care of element-web as well here and re-use variables
+  echo "copying element-web template files into place for ${domain}"
   mkdir -p apps/element/overlays/"${domain}"
   cp -r apps/element/base/overlay_artifacts/* apps/element/overlays/"${domain}"
 
@@ -71,7 +75,7 @@ for domain in $homeservers ; do
   done
 done
 
-## MATRIX-MEDIA-REPO ##
+## Shared resources ##
 if [[ "$mmr_multitenant" == true ]]; then
   tenant="multitenant"
   mmr_homeservers=${mmr_homeservers:=${homeservers}}
