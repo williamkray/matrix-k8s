@@ -5,6 +5,6 @@ resources:
   - element-service.yaml
 
 images:
-  - name: "element"
+  - name: "vectorim/element-web"
     newName: "<REPLACE_WITH_ELEMENT_IMAGE>"
     newTag: "<REPLACE_WITH_ELEMENT_IMAGE_TAG>"
