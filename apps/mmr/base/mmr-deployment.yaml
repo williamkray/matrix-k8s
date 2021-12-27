@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: mmr
-          image: turt2live/matrix-media-repo:v1.2.8
+          image: turt2live/matrix-media-repo:v1.2.10
           ports:
             - containerPort: 8000
               name: mmr

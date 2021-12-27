@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: synapse
-          image: matrixdotorg/synapse:v1.37.1
+          image: matrixdotorg/synapse:v1.49.2
           ports:
             - containerPort: 8008
               name: synapse
